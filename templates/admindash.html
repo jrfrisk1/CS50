@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- CURRENT EVENTS IN CONOLOCAL ORDER -->
+
+<!-- PENDING EVENTS IN CONOLOCAL ORDER -->
+
+<!-- DROP DOWN FOR CREATING EVENT-->
+<div class="container mb-5">
+    <div class="d-flex">
+        <!-- Drop Downs Menue Template-->
+        <div class="dropdown w-100">
+            <!-- Dropdown Button -->
+            <button class="btn btn-secondary btn-lg dropdown-toggle w-100" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                Create Event
+            </button>
+            <!-- Dropdown Menu containing the Form -->
+            <ul class="dropdown-menu p-4 w-100" aria-labelledby="dropdownMenuButton">
+                <li>
+                    {% include 'eventmenu.html' %}
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

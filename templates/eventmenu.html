@@ -1,0 +1,57 @@
+<!-- templates/eventmenu.html -->
+<div class="container mt-5 mb-5">
+    <form>
+        <!-- Name and Host -->
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="eventName" class="form-label">Event Name</label>
+                <input type="text" class="form-control" id="eventName" placeholder="Enter event name">
+            </div>
+            <div class="col-md-6">
+                <label for="hostedBy" class="form-label">Hosted By</label>
+                <input type="text" class="form-control" id="hostedBy" placeholder="Enter host name">
+            </div>
+        </div>
+        <!-- Description -->
+        <div class="row g-3 mt-2">
+            <div class="col-md-12">
+                <label for="description" class="form-label">Description</label>
+                <textarea rows="10" class="form-control" id="description" placeholder="Enter Description"></textarea>
+            </div>
+        </div>
+        <!-- Date Time  -->
+        <div class="row g-3 mt-2">
+            <div class="col-md-4">
+                <label for="date" class="form-label">Date Of Event</label>
+                <input type="date" class="form-control" id="date" placeholder="mm/dd/yyyy">
+            </div>
+            <!--  Frequency -->
+            <div class="col-md-6">
+                <label for="frequency" class="form-label">Frequency</label>
+                <select name="frequency" id="frequency" class="form-select">
+                    <option selected disabled>Select A Frequency</option>
+                    <option value="oneTime">One Time</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+        </div>
+    
+        <div class="row g-3 mt-2">   
+            <div class="col-md-4">
+                <label for="startTime" class="form-label">Start Time Of Event</label>
+                <input type="time" class="form-control" id="startTime" placeholder="">
+            </div>
+            <div class="col-md-4">
+                <label for="endTime" class="form-label">End Time Of Event</label>
+                <input type="time" class="form-control" id="endTime" placeholder="">
+            </div>       
+            <!--  Submit -->
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </div>    
+    </form>
+</div>
