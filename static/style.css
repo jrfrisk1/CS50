@@ -1,3 +1,13 @@
 .bg-green {
     background-color: #526151;
   }
+
+
+  /* Keep the dropdown relative to its button */
+  .dropdown-menu {
+    position: absolute;
+    top: 100%; /* Position it directly below the button */
+    left: 0;
+    width: 100%;
+    z-index: 1050; /* Keep the dropdown above other elements */
+  }

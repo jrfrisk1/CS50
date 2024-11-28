@@ -1,12 +1,29 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- CURRENT EVENTS IN CONOLOCAL ORDER -->
-
-<!-- PENDING EVENTS IN CONOLOCAL ORDER -->
+<!-- PENDING EVENTS IN CONOLOCAL ORDER w/ option to approve  -->
+<!-- CURRENT EVENTS IN CONOLOCAL ORDER w/ option to delete or edit-->
+<div class="container mt-5 mb-5">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+      <!-- Event 1 -->
+       {% for event in events %}
+      <div class="col">
+        <div class="card ">
+          <div class="card-body">
+            <h5 class="card-title">{{ event['name'] }}</h5>
+            <p class="card-text">Hosted By: {{ event['host'] }}</p>
+            <p class="card-text"><strong>Date:</strong> {{ event['event_date'] }}</p>
+            <p class="card-text"><strong>Start Time:</strong> {{ event['start_time'] }}</p>
+            <p class="card-text"><strong>End Time:</strong> {{ event['end_time'] }}</p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      
+      
 
 <!-- DROP DOWN FOR CREATING EVENT-->
-<div class="container mb-5">
+<div class="container mb-5 w-100">
     <div class="d-flex">
         <!-- Drop Downs Menue Template-->
         <div class="dropdown w-100">
@@ -17,12 +34,39 @@
             <!-- Dropdown Menu containing the Form -->
             <ul class="dropdown-menu p-4 w-100" aria-labelledby="dropdownMenuButton">
                 <li>
-                    {% include 'eventmenu.html' %}
+                    {% include 'eventMenuAdmin.html' %}
                 </li>
             </ul>
         </div>
     </div>
 </div>
 
+
+  <!-- TODO -->
+
+<script>
+  const dropdownButton = document.getElementById('dropdownMenuButton');
+  const dropdownMenu = document.querySelector('.dropdown-menu');
+
+  // Toggle dropdown visibility
+  function toggleDropdown(e) {
+    dropdownMenu.classList.toggle('show'); // Toggle dropdown visibility
+    e.stopPropagation(); // Prevents click from closing immediately
+  }
+
+  // Open dropdown on click or touchstart
+  dropdownButton.addEventListener('click', toggleDropdown);
+  dropdownButton.addEventListener('touchstart', toggleDropdown);
+
+  // Close the dropdown when clicking outside (mobile and desktop)
+  document.addEventListener('click', function () {
+    dropdownMenu.classList.remove('show');
+  });
+
+  // Prevent the dropdown from closing when clicking inside the dropdown
+  dropdownMenu.addEventListener('click', function (e) {
+    e.stopPropagation();
+  });
+</script>
 
 {% endblock %}

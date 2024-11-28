@@ -1,6 +1,8 @@
 from flask import Flask, flash, redirect, render_template, request, session # type: ignore
 from cs50 import SQL
 from werkzeug.security import check_password_hash, generate_password_hash
+from datetime import datetime
+from helpers import userToDbDate, userToDbTime
 
 # Create a Flask app instance
 app = Flask(__name__)
@@ -9,6 +11,7 @@ app.secret_key = 'hello'  #TODO HIDE
 # Ensure sessions is temp
 app.config['SESSION_PERMANENT'] = False
 
+db = SQL("sqlite:///events.db")
 
 # Store admin info
 ADMIN_USER = 'admin' #TODO HIDE
@@ -27,15 +30,58 @@ def admin():
             return redirect ('/admin-dash')
         else:
             return render_template('admin.html', error='Invalid Login')
+    
     return render_template('admin.html')
 
 
 # Admin Dash
 @app.route('/admin-dash', methods=['GET', 'POST'])
 def admindash():
-    if 'username' in session:
-        return render_template('admindash.html')
-    return render_template('admin.html', error='Timed Out')
+    if request.method == 'POST':
+        
+        #try to set var from user input TODO check and validate entry from admin
+        try:
+            name = request.form['eventName']
+            host = request.form['hostedBy']
+            desc = request.form['description']
+            date = request.form['date']
+            start = request.form['startTime']
+            end = request.form['endTime']
+            freq = request.form['frequency']
+        except:
+            return redirect("/admin-dash")
+            
+        # Create a new entry into data base thats approved 
+        db.execute("""
+                   INSERT INTO events (
+                       name,
+                       host,
+                       description,
+                       event_date,
+                       start_time,
+                       end_time,
+                       frequency,
+                       status
+                   ) VALUES (?,?,?,?,?,?,?,?)
+                   """,
+                    name,
+                    host,
+                    desc,
+                    date,
+                    start,
+                    end,
+                    freq,
+                    'approved'
+                   )
+      
+        return redirect("/admin-dash")
+    else:   
+        if 'username' in session:
+            events = db.execute("SELECT * FROM events WHERE status = 'approved' ORDER by event_date ASC")
+                                
+                                
+            return render_template('admindash.html', events=events)
+        return redirect('admin.html', error='Timed Out')
 
 
 # Submit Event
