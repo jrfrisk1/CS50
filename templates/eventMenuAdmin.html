@@ -5,30 +5,30 @@
         <div class="row g-3">
             <div class="col-md-6">
                 <label for="eventName" class="form-label">Event Name</label>
-                <input type="text" name="eventName" class="form-control" id="eventName" placeholder="Enter event name">
+                <input type="text" name="eventName" class="form-control" required id="eventName" placeholder="Enter event name">
             </div>
             <div class="col-md-6">
                 <label for="hostedBy" class="form-label">Hosted By</label>
-                <input type="text" name="hostedBy" class="form-control" id="hostedBy" placeholder="Enter host name">
+                <input type="text" name="hostedBy" class="form-control" required id="hostedBy" placeholder="Enter host name">
             </div>
         </div>
         <!-- Description -->
         <div class="row g-3 mt-2">
             <div class="col-md-12">
                 <label for="description" class="form-label">Description</label>
-                <textarea rows="10" name="description" class="form-control" id="description" placeholder="Enter Description"></textarea>
+                <textarea rows="10" required name="description" class="form-control" id="description" placeholder="Enter Description"></textarea>
             </div>
         </div>
         <!-- Date Time  -->
         <div class="row g-3 mt-2">
             <div class="col-md-4">
                 <label for="date" class="form-label">Date Of Event</label>
-                <input type="date" name="date" class="form-control" id="date" placeholder="mm/dd/yyyy">
+                <input type="date" name="date" required  class="form-control" id="date" placeholder="mm/dd/yyyy">
             </div>
             <!--  Frequency -->
             <div class="col-md-6">
                 <label for="frequency" class="form-label">Frequency</label>
-                <select name="frequency" name="frequency" id="frequency" class="form-select">
+                <select name="frequency" required name="frequency" id="frequency" class="form-select">
                     <option selected disabled>Select A Frequency</option>
                     <option value="oneTime">One Time</option>
                     <option value="weekly">Weekly</option>
@@ -42,12 +42,9 @@
         <div class="row g-3 mt-2">   
             <div class="col-md-4">
                 <label for="startTime" class="form-label">Start Time Of Event</label>
-                <input type="time" name="startTime" class="form-control" id="startTime" placeholder="">
+                <input type="time" required name="startTime" class="form-control" id="startTime" placeholder="">
             </div>
-            <div class="col-md-4">
-                <label for="endTime" class="form-label">End Time Of Event</label>
-                <input type="time" name="endTime" class="form-control" id="endTime" placeholder="">
-            </div>       
+   
             <!--  Submit -->
             <div class="col-md-4">
                 <button type="submit" class="btn btn-primary">Submit</button>
@@ -55,3 +52,4 @@
         </div>    
     </form>
 </div>
+

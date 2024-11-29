@@ -2,7 +2,7 @@ from flask import Flask, flash, redirect, render_template, request, session # ty
 from cs50 import SQL
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime
-from helpers import userToDbDate, userToDbTime
+from helpers import convert_to_ampm,dbToUserDate
 
 # Create a Flask app instance
 app = Flask(__name__)
@@ -46,7 +46,6 @@ def admindash():
             desc = request.form['description']
             date = request.form['date']
             start = request.form['startTime']
-            end = request.form['endTime']
             freq = request.form['frequency']
         except:
             return redirect("/admin-dash")
@@ -59,17 +58,15 @@ def admindash():
                        description,
                        event_date,
                        start_time,
-                       end_time,
                        frequency,
                        status
-                   ) VALUES (?,?,?,?,?,?,?,?)
+                   ) VALUES (?,?,?,?,?,?,?)
                    """,
                     name,
                     host,
                     desc,
                     date,
                     start,
-                    end,
                     freq,
                     'approved'
                    )
@@ -78,10 +75,22 @@ def admindash():
     else:   
         if 'username' in session:
             events = db.execute("SELECT * FROM events WHERE status = 'approved' ORDER by event_date ASC")
-                                
+            
+            for event in events:
+                event['start_time'] = convert_to_ampm(event['start_time']) 
+                event['event_date'] = dbToUserDate(event['event_date'])                  
                                 
             return render_template('admindash.html', events=events)
         return redirect('admin.html', error='Timed Out')
+
+# Admin Dash delete-event
+@app.route('/delete-event', methods=['POST'])
+def deleteEvent():
+    id = request.form.get('event_id')
+    if id:
+        db.execute("DELETE FROM events WHERE id= ?", id)
+    return redirect("/admin-dash")
+    
 
 
 # Submit Event
@@ -99,7 +108,13 @@ def index():
 # Events
 @app.route('/events')
 def events():
-    return render_template('events.html')
+    events = db.execute("SELECT * FROM events WHERE status = 'approved' ORDER by event_date ASC")
+            
+    for event in events:
+        event['start_time'] = convert_to_ampm(event['start_time']) 
+        event['event_date'] = dbToUserDate(event['event_date'])  
+        
+    return render_template('events.html',events=events)
 
 
 # Whats Kava
