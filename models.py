@@ -4,11 +4,9 @@ from sqlalchemy.orm import declarative_base
 import os
 
 # Check if running on Heroku, else use SQLite locally
-if os.environ.get("DATABASE_URL"):
-    url = os.getenv("DATABASE_URL")  # Use the DATABASE_URL environment variable for Heroku
-else:
-    url = "sqlite:///events.db"  # Use SQLite locally
 
+url = os.getenv("DATABASE_URL")  # Use the DATABASE_URL environment variable for Heroku
+ 
 # Create an engine for a SQLite database
 engine = create_engine(url, echo=True)
 
