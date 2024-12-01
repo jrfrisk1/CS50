@@ -1,8 +1,13 @@
 from sqlalchemy import Column, Integer, String, Date, Time, Text, Enum, DateTime, create_engine
 from sqlalchemy.sql import func
 from sqlalchemy.orm import declarative_base
+import os
 
-url = "sqlite:///events.db"  # Change this to a file-based database if needed
+# Check if running on Heroku, else use SQLite locally
+if os.environ.get("DATABASE_URL"):
+    url = os.getenv("DATABASE_URL")  # Use the DATABASE_URL environment variable for Heroku
+else:
+    url = "sqlite:///events.db"  # Use SQLite locally
 
 # Create an engine for a SQLite database
 engine = create_engine(url, echo=True)
