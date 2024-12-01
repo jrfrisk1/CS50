@@ -23,14 +23,16 @@ app.config["SESSION_PERMANENT"] = False
 ADMIN_USER = "admin"  # TODO HIDE
 ADMIN_PASS = "123"  # TODO HIDE
 
+# Admin Routes
 
-# Admin login
+
+# Admin Login
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
     if request.method == "POST":
         if request.form["username"] and request.form["password"]:
             if (
-                ADMIN_USER == request.form["username"]
+                ADMIN_USER == request.form["username"].lower()
                 and ADMIN_PASS == request.form["password"]
             ):
                 session["username"] = ADMIN_USER
@@ -45,8 +47,6 @@ def admin():
 @app.route("/admin-dash", methods=["GET", "POST"])
 def admindash():
     if request.method == "POST":
-
-        # try to set var from user input
         try:
             name = request.form["eventName"]
             host = request.form["hostedBy"]
@@ -57,10 +57,9 @@ def admindash():
         except:
             return redirect("/")
 
-        date = datetime.strptime(date, "%Y-%m-%d").date()  # Format: YYYY-MM-DD
-        start = datetime.strptime(start, "%H:%M").time()  # Format: HH:MM
+        date = datetime.strptime(date, "%Y-%m-%d").date()
+        start = datetime.strptime(start, "%H:%M").time()
 
-        # Create a new entry into data base thats approved
         event = Event(
             name=name,
             host=host,
@@ -72,26 +71,27 @@ def admindash():
         )
 
         try:
-            db_session.add(event)  # add event to session
+            db_session.add(event)
             db_session.commit()
+            flash("Event Created Successfully!", "success")
         except:
             db_session.rollback()
+            flash("Event Failed To Create", "danger")
 
         return redirect("/admin-dash")
 
-    # To show adamin dash
     else:
         if "username" in session:
             try:
-                # Query approved events, ordered by event date
+                today = datetime.today().date()
+
                 events = (
                     db_session.query(Event)
-                    .filter_by(status="Approved")
+                    .filter(Event.status == "Approved", Event.event_date >= today)
                     .order_by(Event.event_date.asc())
                     .all()
                 )
 
-                # Format start_time and event_date for display only, without altering the objects in the database
                 formatted_events = []
                 for event in events:
                     formatted_event = {
@@ -119,14 +119,78 @@ def admindash():
                 return render_template("admindash.html", events=formatted_events)
 
             except Exception as e:
-                db_session.rollback()  # Rollback session if any error occurs
-                print(f"Error occurred: {e}")
-                return redirect("/admin")  # Redirect on error
+                db_session.rollback()
+                flash("Error", "danger")
+                return redirect("/admin")
 
-        return redirect("admin.html", error="Timed Out")
+        flash("Not Logged In.", "danger")
+        return redirect("/admin")
 
 
-# Admin Dash delete-event
+# Admin Edit
+@app.route("/edit-event", methods=["GET", "POST"])
+def editEvent():
+
+    event_id = request.form.get("event_id")
+    if event_id:
+        formatted_events = []
+        event = db_session.query(Event).filter_by(id=event_id).first()
+
+        formatted_event = {
+            "id": event.id,
+            "name": event.name,
+            "host": event.host,
+            "description": event.description,
+            "event_date": event.event_date,
+            "start_time": event.start_time,
+            "frequency": event.frequency,
+            "status": event.status,
+            "created_at": event.created_at,
+            "updated_at": event.updated_at,
+        }
+        formatted_events.append(formatted_event)
+        return render_template("editevent.html", formatted_event=formatted_event)
+    else:
+        flash("Event Not Found", "danger")
+
+
+# Admin Update
+@app.route("/update_event/<int:event_id>", methods=["POST"])
+def updateEvent(event_id):
+    name = request.form.get("name")
+    host = request.form.get("host")
+    description = request.form.get("description")
+    event_date = request.form.get("event_date")
+    start_time = request.form.get("start_time")
+    frequency = request.form.get("frequency")
+    status = request.form.get("status")
+
+    event_date_obj = (
+        datetime.strptime(event_date, "%Y-%m-%d").date() if event_date else None
+    )
+
+    if start_time:
+        try:
+            start_time_obj = datetime.strptime(start_time, "%H:%M:%S").time()
+        except ValueError:
+            start_time_obj = datetime.strptime(start_time, "%H:%M").time()
+
+    event = db_session.query(Event).filter_by(id=event_id).one_or_none()
+
+    event.name = name
+    event.host = host
+    event.description = description
+    event.event_date = event_date_obj
+    event.start_time = start_time_obj
+    event.frequency = frequency
+    event.status = status
+
+    db_session.commit()
+    flash("Event updated successfully.", "success")
+    return redirect("/admin-dash")
+
+
+# Admin Delete
 @app.route("/delete-event", methods=["POST"])
 def deleteEvent():
     event_id = request.form.get("event_id")
@@ -136,8 +200,14 @@ def deleteEvent():
         if event:
             db_session.delete(event)
             db_session.commit()
+    else:
+        flash("Cannot Find Event.", "danger")
 
+    flash("Event Deleted.", "success")
     return redirect("/admin-dash")
+
+
+# Users Routes
 
 
 # Submit Event
@@ -156,15 +226,16 @@ def index():
 @app.route("/events")
 def events():
 
+    today = datetime.today().date()
+
     # Query approved events, ordered by event date
     events = (
         db_session.query(Event)
-        .filter_by(status="Approved")
+        .filter(Event.status == "Approved", Event.event_date >= today)
         .order_by(Event.event_date.asc())
         .all()
     )
 
-    # Format start_time and event_date for display only, without altering the objects in the database
     formatted_events = []
     for event in events:
         formatted_event = {

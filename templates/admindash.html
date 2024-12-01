@@ -2,34 +2,30 @@
 
 {% block content %}
 <!-- PENDING EVENTS IN CONOLOCAL ORDER w/ option to approve  -->
-<!-- CURRENT EVENTS IN CONOLOCAL ORDER w/ option to delete or edit-->
+ 
+ <!--CURRENT EVENTS IN CONOLOCAL ORDER w/ option to approve  -->
 <div class="container mt-4 mb-5">
-    
-
-       
-  <ul class="list-group list-group">
-    <h2 class="text-center mb-4 text-light"> Current Events </h2>
+  <ul class="list-group">
+    <h2 class="text-center mb-4 text-light">Current Events</h2>
     {% for event in events %}
+    <li class="list-group-item d-flex justify-content-between align-items-center mb-3">
 
-    <li class="list-group-item d-flex justify-content-between align-itmes-center">
       <div class="ms-2 me-auto ">
-        <div class="fw-bold me-3">{{ event['name'] }} Hosted by: {{ event['host'] }}</div>
-        On {{ event['event_date'] }} At {{ event['start_time'] }}
+        <div class="fw-bold me-3 pb-1"><div class="h4">{{ event['name'] }} <small class="text-muted fs-6">Host: {{ event['host'] }}</small></div></div>
+        On <span class="fw-bold">{{ event['event_date'] }}</span> At <span class="fw-bold">{{ event['start_time'] }}</span>
       </div>
-      <span class="align-content-center ">
-      <form action="/delete-event" method="POST" style="display:inline;">
-      <input type="hidden" name="event_id" value="{{ event['id'] }}">
-      <button type="submit" class="btn btn-danger">DELETE</button>
-      </form></span>
-    </li>
 
+      <div class="d-flex align-items-center">
+        <form action="/edit-event" method="POST" style="display:inline;">
+          <input type="hidden" name="event_id" value="{{ event['id'] }}">
+          <button type="submit" class="btn btn-success">EDIT</button>
+        </form>
+      </div>
+      
+    </li>
     {% endfor %}
   </ul>
-
-      
-      
-</div>
-      
+</div>      
 
       
 
@@ -53,28 +49,26 @@
 </div>
 
 
-  <!-- TODO -->
 
 <script>
   const dropdownButton = document.getElementById('dropdownMenuButton');
   const dropdownMenu = document.querySelector('.dropdown-menu');
 
-  // Toggle dropdown visibility
   function toggleDropdown(e) {
-    dropdownMenu.classList.toggle('show'); // Toggle dropdown visibility
-    e.stopPropagation(); // Prevents click from closing immediately
+    dropdownMenu.classList.toggle('show'); 
+    e.stopPropagation(); 
   }
 
-  // Open dropdown on click or touchstart
+  
   dropdownButton.addEventListener('click', toggleDropdown);
   dropdownButton.addEventListener('touchstart', toggleDropdown);
 
-  // Close the dropdown when clicking outside (mobile and desktop)
+  
   document.addEventListener('click', function () {
     dropdownMenu.classList.remove('show');
   });
 
-  // Prevent the dropdown from closing when clicking inside the dropdown
+ 
   dropdownMenu.addEventListener('click', function (e) {
     e.stopPropagation();
   });

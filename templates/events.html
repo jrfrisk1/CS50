@@ -1,17 +1,23 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container my-4 ">
+
+<div class="container pt-4">
+<h1 class="text-center mb-4 text-light fw-semibold">Upcoming Events</h1>
+</div>
+
+<div class="container mb-4 pb-4 px-2 ">
     <div class="row justify-content-center mx-2">
         {% for event in events %}
-        <div class="card w-100 mb-4 justify-content-center " style="max-width: 70rem;">
+        <div class="card w-100 mb-4 justify-content-center " style="max-width: 70rem; max-height: 30rem;">
             <img src="" alt="" class="card-img-top">
             <div class="card-body w-100">
-                <h5><span class="fw-bold">{{ event['name'] }} -</span> <span class="h6">Hosted By {{ event['host'] }}</span></h5>
-                <p class="card-text">{{ event['description'] }}</p>
+                <h5 class="text-center"><span class="fw-semibold">{{ event['name'] }} -</span> <span class="text-muted fs-6">Hosted By {{ event['host'] }}</span></h5>
+                <hr style="width:85%; margin: 0 auto;">
+                <p class="card-text pt-1">{{ event['description'] }}</p>
             </div>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item">{{ event['event_date'] }} at {{ event['start_time'] }}</li>
+            <ul class="list-group list-group-flush text-center">
+                <li class="list-group-item fw-bold">{{ event['event_date'] }} at {{ event['start_time'] }}</li>
             
             </ul>
         </div>

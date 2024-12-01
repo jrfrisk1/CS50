@@ -6,11 +6,24 @@
   background-color: #526151;
 }
 
-  /* Keep the dropdown relative to its button */
+  
   .dropdown-menu {
     position: absolute;
-    top: 100%; /* Position it directly below the button */
+    top: 100%; 
     left: 0;
     width: 100%;
-    z-index: 1050; /* Keep the dropdown above other elements */
+    z-index: 1050; 
   }
+
+@media (min-width: 768px){
+  .landingP {
+    width: 35vw;
+  }
+}
+
+.max-w-large {
+  max-width: 600px;
+  }
+.max-w-med {
+    max-width: 300px;
+    }
