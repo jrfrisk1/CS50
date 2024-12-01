@@ -4,8 +4,11 @@ from sqlalchemy.orm import declarative_base
 import os
 
 # Check if running on Heroku, else use SQLite locally
+url = os.getenv("DATABASE_URL")  # or other relevant config var
+if url and url.startswith("postgres://"):
+    uri = url.replace("postgres://", "postgresql://", 1)
 
-url = os.getenv("DATABASE_URL")  # Use the DATABASE_URL environment variable for Heroku
+
  
 # Create an engine for a SQLite database
 engine = create_engine(url, echo=True)
