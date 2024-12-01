@@ -1,7 +1,8 @@
 from flask import Flask, flash, redirect, render_template, request, session  # type: ignore
 from datetime import datetime
-from models import Event, engine, init_db
 from sqlalchemy.orm import sessionmaker
+
+from models import Event, engine, init_db
 from helpers import convert_to_ampm, dbToUserDate
 
 # Create a Flask app instance
@@ -12,13 +13,11 @@ app.secret_key = "hello"  # TODO HIDE
 Session = sessionmaker(bind=engine)
 db_session = Session()
 
-
 # Create a session instance
 init_db()
 
 # Ensure sessions is temp
 app.config["SESSION_PERMANENT"] = False
-
 
 # Store admin info
 ADMIN_USER = "admin"  # TODO HIDE
@@ -199,9 +198,6 @@ def whatskava():
 @app.route("/contact")
 def contact():
     return render_template("contact.html")
-
-
-# Initialize the database (create tables if they don't exist)
 
 
 # Run the application
