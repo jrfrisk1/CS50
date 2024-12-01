@@ -6,7 +6,7 @@ import os
 # Check if running on Heroku, else use SQLite locally
 url = os.getenv("DATABASE_URL")  # or other relevant config var
 if url and url.startswith("postgres://"):
-    uri = url.replace("postgres://", "postgresql://", 1)
+    url = url.replace("postgres://", "postgresql://", 1)
 
 
  
