@@ -1,9 +1,8 @@
-from flask import Flask, flash, redirect, render_template, request, session  # type: ignore
-from datetime import datetime
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 from sqlalchemy.orm import sessionmaker
-
+from datetime import datetime
 from models import Event, engine, init_db
-from helpers import convert_to_ampm, dbToUserDate
+
 
 # Create a Flask app instance
 app = Flask(__name__)
@@ -23,14 +22,15 @@ app.config["SESSION_PERMANENT"] = False
 ADMIN_USER = "admin"  # TODO HIDE
 ADMIN_PASS = "123"  # TODO HIDE
 
-# Admin Routes
-
+''' Admin Routes'''
 
 # Admin Login
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
     if request.method == "POST":
-        if request.form["username"] and request.form["password"]:
+        # If username and password found
+        if request.form["username"] and request.form["password"]:\
+            # If username and password match
             if (
                 ADMIN_USER == request.form["username"].lower()
                 and ADMIN_PASS == request.form["password"]
@@ -38,24 +38,24 @@ def admin():
                 session["username"] = ADMIN_USER
                 return redirect("/admin-dash")
             else:
-                return render_template("admin.html", error="Invalid Login")
-
-    return render_template("admin.html")
+                return render_template("admin/adminLogin.html", error="Invalid Login")
+    if "username" in session:
+        return redirect("/admin-dash")
+    else:
+        return render_template("admin/adminLogin.html")
 
 
 # Admin Dash
 @app.route("/admin-dash", methods=["GET", "POST"])
 def admindash():
     if request.method == "POST":
-        try:
-            name = request.form["eventName"]
-            host = request.form["hostedBy"]
-            desc = request.form["description"]
-            date = request.form["date"]
-            start = request.form["startTime"]
-            freq = request.form["frequency"]
-        except:
-            return redirect("/")
+        name = request.form.get("eventName")
+        host = request.form.get("hostedBy")
+        desc = request.form.get("description")
+        date = request.form.get("date")
+        start = request.form.get("startTime")
+        freq = request.form.get("frequency")    
+        img = request.files.get("imageUpload")    
 
         date = datetime.strptime(date, "%Y-%m-%d").date()
         start = datetime.strptime(start, "%H:%M").time()
@@ -74,27 +74,36 @@ def admindash():
             db_session.add(event)
             db_session.commit()
             flash("Event Created Successfully!", "success")
-        except:
+        except Exception as e:
             db_session.rollback()
-            flash("Event Failed To Create", "danger")
+            flash(f"Event Failed To Create - {e}", "danger")
 
         return redirect("/admin-dash")
 
     else:
+        # If logged in
         if "username" in session:
             try:
                 today = datetime.today().date()
 
-                events = (
+                approvedEvents = (
                     db_session.query(Event)
                     .filter(Event.status == "Approved", Event.event_date >= today)
                     .order_by(Event.event_date.asc())
                     .all()
                 )
-
-                formatted_events = []
-                for event in events:
-                    formatted_event = {
+                
+                pendingEvents = (
+                    db_session.query(Event)
+                    .filter(Event.status == "Pending", Event.event_date >= today)
+                    .order_by(Event.event_date.asc())
+                    .all()
+                )
+                pendingEventsFormatted = []
+                
+                approvedEventsFormatted = []
+                for event in approvedEvents:
+                    ApprovedFormattedEvent = {
                         "id": event.id,
                         "name": event.name,
                         "host": event.host,
@@ -114,17 +123,40 @@ def admindash():
                         "created_at": event.created_at,
                         "updated_at": event.updated_at,
                     }
-                    formatted_events.append(formatted_event)
+                    approvedEventsFormatted.append(ApprovedFormattedEvent)
+                
+                for event in pendingEvents:
+                    pendingFormattedEvent = {
+                        "id": event.id,
+                        "name": event.name,
+                        "host": event.host,
+                        "description": event.description,
+                        "event_date": (
+                            event.event_date.strftime("%m/%d/%Y")
+                            if event.event_date
+                            else None
+                        ),
+                        "start_time": (
+                            event.start_time.strftime("%I:%M %p")
+                            if event.start_time
+                            else None
+                        ),
+                        "frequency": event.frequency,
+                        "status": event.status,
+                        "created_at": event.created_at,
+                        "updated_at": event.updated_at,
+                    }
+                    pendingEventsFormatted.append(pendingFormattedEvent)
 
-                return render_template("admindash.html", events=formatted_events)
+                return render_template("/admin/adminDash.html", approvedEvents=approvedEventsFormatted,pendingEvents=pendingEventsFormatted)
 
             except Exception as e:
                 db_session.rollback()
-                flash("Error", "danger")
+                flash(f"Error{e} ", "danger")
                 return redirect("/admin")
-
-        flash("Not Logged In.", "danger")
-        return redirect("/admin")
+        else:
+            flash("Not Logged In.", "danger")
+            return redirect("/admin")
 
 
 # Admin Edit
@@ -149,7 +181,7 @@ def editEvent():
             "updated_at": event.updated_at,
         }
         formatted_events.append(formatted_event)
-        return render_template("editevent.html", formatted_event=formatted_event)
+        return render_template("admin/editevent.html", formatted_event=formatted_event)
     else:
         flash("Event Not Found", "danger")
 
@@ -175,26 +207,29 @@ def updateEvent(event_id):
         except ValueError:
             start_time_obj = datetime.strptime(start_time, "%H:%M").time()
 
-    event = db_session.query(Event).filter_by(id=event_id).one_or_none()
+    try:
+        event = db_session.query(Event).filter_by(id=event_id).one_or_none()
 
-    event.name = name
-    event.host = host
-    event.description = description
-    event.event_date = event_date_obj
-    event.start_time = start_time_obj
-    event.frequency = frequency
-    event.status = status
+        event.name = name
+        event.host = host
+        event.description = description
+        event.event_date = event_date_obj
+        event.start_time = start_time_obj
+        event.frequency = frequency
+        event.status = status
 
-    db_session.commit()
-    flash("Event updated successfully.", "success")
-    return redirect("/admin-dash")
+        db_session.commit()
+        flash("Event updated successfully.", "success")
+        return redirect("/admin-dash")
+    except Exception as e:
+        flash(f"e", "danger")
 
 
 # Admin Delete
 @app.route("/delete-event", methods=["POST"])
 def deleteEvent():
     event_id = request.form.get("event_id")
-    if id:
+    if event_id:
         event = db_session.query(Event).filter_by(id=event_id).first()
 
         if event:
@@ -207,23 +242,78 @@ def deleteEvent():
     return redirect("/admin-dash")
 
 
-# Users Routes
+@app.route("/approve-event", methods=["POST"])
+def approveEvent():
+    event_id = request.form.get("event_id")
+    if event_id:
+        event = db_session.query(Event).filter_by(id=event_id).first()
+        
+        event.status = "Approved"
+        db_session.commit()
+        flash("Event Approved", "success")
+        return redirect("/admin-dash")
 
+
+    flash("Event not found.", "success")
+    return redirect("/admin-dash")
+
+@app.route("/deny-event", methods=["POST"])
+def denyEvent():
+    event_id = request.form.get("event_id")
+    if event_id:
+        event = db_session.query(Event).filter_by(id=event_id).first()
+        
+        event.status = "Denied"
+        db_session.commit()
+        flash("Event Denied", "success")
+        return redirect("/admin-dash")
+
+
+    flash("Event not found.", "success")
+    return redirect("/admin-dash")
+
+
+'''Users Routes'''
 
 # Submit Event
-@app.route("/submit-event")
+@app.route("/submit-event", methods=["POST","GET"])
 def submitevent():
-    return render_template("submitevent.html")
+    if request.method == "POST":
+        name = request.form.get("eventName")
+        host = request.form.get("hostedBy")
+        desc = request.form.get("description")
+        date = request.form.get("date")
+        start = request.form.get("startTime")
+        freq = request.form.get("frequency")    
+        img = request.files.get("imageUpload")    
 
+        date = datetime.strptime(date, "%Y-%m-%d").date()
+        start = datetime.strptime(start, "%H:%M").time()
 
-# HomePage
-@app.route("/")
-def index():
-    return render_template("index.html")
+        event = Event(
+            name=name,
+            host=host,
+            description=desc,
+            event_date=date,
+            start_time=start,
+            frequency=freq,
+            status="Pending",
+        )
+
+        try:
+            db_session.add(event)
+            db_session.commit()
+            flash("Event Submitted Successfully!", "success")
+        except Exception as e:
+            db_session.rollback()
+            flash(f"Event Failed To Create - {e}", "danger")
+
+        return redirect(request.referrer or "/")
+    
 
 
 # Events
-@app.route("/events")
+@app.route("/")
 def events():
 
     today = datetime.today().date()
@@ -256,19 +346,8 @@ def events():
         }
         formatted_events.append(formatted_event)
 
-    return render_template("events.html", events=formatted_events)
+    return render_template("/users/events.html", events=formatted_events)
 
-
-# Whats Kava
-@app.route("/whats-kava")
-def whatskava():
-    return render_template("whatskava.html")
-
-
-# Contact Us
-@app.route("/contact")
-def contact():
-    return render_template("contact.html")
 
 
 # Run the application

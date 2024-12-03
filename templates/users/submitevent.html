@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <form action="/submit-event" method="POST" autocomplete="off" class="text-bg-dark">
+        {% include '/addEvent.html' %}
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+{% endblock %}

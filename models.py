@@ -1,22 +1,23 @@
-from sqlalchemy import Column, Integer, String, Date, Time, Text, Enum, DateTime, create_engine
+from sqlalchemy import Column, Integer, String, Date, Time, Text, Enum, DateTime, create_engine, LargeBinary
 from sqlalchemy.sql import func
 from sqlalchemy.orm import declarative_base
 import os
 
-# Check if running on Heroku, else use SQLite locally
-url = os.getenv("DATABASE_URL")  # or other relevant config var
+# Try to connect to Heroku Database if not make Sqlite Datbase
+url = os.getenv("DATABASE_URL")  
 if url and url.startswith("postgres://"):
     url = url.replace("postgres://", "postgresql://", 1)
-
+else:
+    url = "sqlite:///events.db"
 
  
-# Create an engine for a SQLite database
+# Create an engine for a given database
 engine = create_engine(url, echo=True)
-
 Base = declarative_base()
 
 
 class Event(Base):
+    """Class for Events"""
     __tablename__ = 'events'
     
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -29,6 +30,7 @@ class Event(Base):
     status = Column(Enum('Pending', 'Approved', 'Denied', name='event_status'), default='Pending')  # Enum for status
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now())
+    
     
 
 
