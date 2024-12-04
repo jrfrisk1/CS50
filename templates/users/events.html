@@ -14,12 +14,12 @@
         </div>
         {% else %}
         {% for event in events %}
-        <div class="card w-100 mb-4 justify-content-center " style="max-width: 70rem; max-height: 30rem;">
+        <div class="card w-100 mb-4 justify-content-center  clickable-card" style="max-width: 70rem; max-height: 30rem;" data-url="/event/{{ event['id'] }}">
             <img src="" alt="" class="card-img-top">
             <div class="card-body w-100">
                 <h5 class="text-center"><span class="fw-semibold">{{ event['name'] }} -</span> <span class="text-muted fs-6">Hosted By {{ event['host'] }}</span></h5>
                 <hr style="width:85%; margin: 0 auto;">
-                <p class="card-text pt-1">{{ event['description'] }}</p>
+                <p class="card-text pt-1">{{ event.description.replace('\n', '<br>')|safe }}</p>
             </div>
             <ul class="list-group list-group-flush text-center">
                 <li class="list-group-item fw-bold">{{ event['event_date'] }} at {{ event['start_time'] }}</li>
@@ -31,5 +31,20 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const cards = document.querySelectorAll(".clickable-card");
+
+        cards.forEach(card => {
+            card.addEventListener("click", function() {
+                const url = this.dataset.url; 
+                if (url) {
+                    window.location.href = url; 
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}
 

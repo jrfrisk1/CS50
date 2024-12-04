@@ -30,6 +30,8 @@ class Event(Base):
     status = Column(Enum('Pending', 'Approved', 'Denied', name='event_status'), default='Pending')  # Enum for status
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now())
+    host_link = Column(String)
+    
     
     
 

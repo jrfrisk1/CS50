@@ -130,7 +130,7 @@ def admindash():
                         "id": event.id,
                         "name": event.name,
                         "host": event.host,
-                        "description": event.description,
+                        "description": event.description[:350] + ". . .",
                         "event_date": (
                             event.event_date.strftime("%m/%d/%Y")
                             if event.event_date
@@ -179,6 +179,7 @@ def editEvent():
             "status": event.status,
             "created_at": event.created_at,
             "updated_at": event.updated_at,
+            "host_link":event.host_link
         }
         formatted_events.append(formatted_event)
         return render_template("admin/editevent.html", formatted_event=formatted_event)
@@ -196,6 +197,7 @@ def updateEvent(event_id):
     start_time = request.form.get("start_time")
     frequency = request.form.get("frequency")
     status = request.form.get("status")
+    host_link = request.form.get("hostLink")
 
     event_date_obj = (
         datetime.strptime(event_date, "%Y-%m-%d").date() if event_date else None
@@ -217,6 +219,7 @@ def updateEvent(event_id):
         event.start_time = start_time_obj
         event.frequency = frequency
         event.status = status
+        event.host_link = host_link
 
         db_session.commit()
         flash("Event updated successfully.", "success")
@@ -285,7 +288,7 @@ def submitevent():
         date = request.form.get("date")
         start = request.form.get("startTime")
         freq = request.form.get("frequency")    
-        img = request.files.get("imageUpload")    
+        link = request.form.get("hostLink")   
 
         date = datetime.strptime(date, "%Y-%m-%d").date()
         start = datetime.strptime(start, "%H:%M").time()
@@ -298,6 +301,7 @@ def submitevent():
             start_time=start,
             frequency=freq,
             status="Pending",
+            host_link=link
         )
 
         try:
@@ -310,8 +314,6 @@ def submitevent():
 
         return redirect(request.referrer or "/")
     
-
-
 # Events
 @app.route("/")
 def events():
@@ -332,7 +334,7 @@ def events():
             "id": event.id,
             "name": event.name,
             "host": event.host,
-            "description": event.description,
+            "description": event.description[:350] + ". . .",
             "event_date": (
                 event.event_date.strftime("%m/%d/%Y") if event.event_date else None
             ),
@@ -348,7 +350,36 @@ def events():
 
     return render_template("/users/events.html", events=formatted_events)
 
+@app.route("/event/<int:event_id>", methods=["POST","GET"])
+def eventView(event_id):
+    event = db_session.query(Event).filter_by(id=event_id).one_or_none()
+    
+    host_link = event.host_link
+    
+    if host_link and not (host_link.startswith("http://") or host_link.startswith("https://")):
+        host_link = "https://" + host_link
+    
+    formatted_event = {
+        "id": event.id,
+        "name": event.name,
+        "host": event.host,
+        "description": event.description,
+        "event_date": (
+            event.event_date.strftime("%m/%d/%Y") if event.event_date else None
+        ),
+        "start_time": (
+            event.start_time.strftime("%I:%M %p") if event.start_time else None
+        ),
+        "frequency": event.frequency,
+        "status": event.status,
+        "created_at": event.created_at,
+        "updated_at": event.updated_at,
+        "host_link":host_link
+    }
 
+        
+    
+    return render_template('viewEvent.html',event=formatted_event,link=request.referrer or '/')
 
 # Run the application
 if __name__ == "__main__":

@@ -18,6 +18,10 @@
                 <input type="text" class="form-control" id="host" name="host" value="{{ formatted_event['host'] }}">
             </div>
             <div class="mb-3">
+                <label for="hostLink" class="form-label">Host Link</label>
+                <input type="text" class="form-control" id="hostLink" name="hostLink" value="{{ formatted_event['host_link'] }}">
+            </div>
+            <div class="mb-3">
                 <label for="description" class="form-label">Description</label>
                 <textarea class="form-control" id="description" name="description" rows="8">{{ formatted_event['description'] }}</textarea>
             </div>

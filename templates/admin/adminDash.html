@@ -16,12 +16,12 @@
       </div>
       {% else %}
       {% for event in pendingEvents %}
-      <div class="card w-100 mb-4 justify-content-center " style="max-width: 70rem; max-height: 30rem;">
+      <div class="card w-100 mb-4 justify-content-center clickable-item" data-url="/event/{{ event['id'] }}" style="max-width: 70rem; max-height: 30rem;">
           <img src="" alt="" class="card-img-top">
           <div class="card-body w-100">
               <h5 class="text-center"><span class="fw-semibold">{{ event['name'] }} -</span> <span class="text-muted fs-6">Hosted By {{ event['host'] }}</span></h5>
               <hr style="width:85%; margin: 0 auto;">
-              <p class="card-text pt-1">{{ event['description'] }}</p>
+              <p class="card-text pt-1">{{ event['description']|safe  }}</p>
           </div>
           <ul class="list-group list-group-flush text-center">
               <li class="list-group-item fw-bold">{{ event['event_date'] }} at {{ event['start_time'] }}</li>
@@ -52,41 +52,19 @@
 <div class="container mt-4 mb-5">
   <ul class="list-group">
     <h2 class="text-center mb-4 text-light">Current Events</h2>
-    <div class="container mb-2"> 
-      
-     <!-- <div class="d-flex ">
-        <button class="btn btn-light w-100 m-auto mt-1 " type="button" data-bs-toggle="modal" data-bs-target="#addEventModal">
-          Add A New Event
-        </button>
-        <div class="modal fade" id="addEventModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="addEventModal" aria-hidden="true">
-          <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="addNewEvent">Add New Event</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              
-                <form action="/admin-dash" method="POST" autocomplete="off" class="text-bg-dark">
-                  <div class="modal-body">
-                   include '/addEvent.html' 
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Submit</button>
-                 </div>
-              </form>
-            </div>
-          </div>      
-        </div>
-      </div> -->
-  
-
-    </div>
+    <div class="container mb-2 align-items-center justify-content-center"> 
     
+    
+    {% if not approvedEvents %}
+      <div class="card w-100 mb-1 justify-content-center m-auto" style="max-width: 70rem; max-height: 25rem;">
+        <h5 class="text-center text-secondary m-3">No Current Events Found!</h5>
+      </div>
+    </div>
+    {% else %}
     {% for event in approvedEvents %}
-    <li class="list-group-item d-flex justify-content-between align-items-center mb-3">
+    <li class=" list-group-item d-flex justify-content-between align-items-center mb-3 clickable-item" data-url="/event/{{ event['id'] }}">
 
-      <div class="ms-2 me-auto ">
+      <div class="ms-2 me-auto">
         <div class="fw-bold me-3 pb-1"><div class="h4">{{ event['name'] }} <small class="text-muted fs-6">Host: {{ event['host'] }}</small></div></div>
         On <span class="fw-bold">{{ event['event_date'] }}</span> At <span class="fw-bold">{{ event['start_time'] }}</span>
       </div>
@@ -100,37 +78,36 @@
       
     </li>
     {% endfor %}
+    {% endif %}
   </ul>
 </div>     
 
 
 
-    
-
-
-
 <script>
-  const dropdownButton = document.getElementById('dropdownMenuButton');
-  const dropdownMenu = document.querySelector('.dropdown-menu');
+  document.addEventListener("DOMContentLoaded", function() {
+    const clickableItems = document.querySelectorAll(".clickable-item");
 
-  function toggleDropdown(e) {
-    dropdownMenu.classList.toggle('show'); 
-    e.stopPropagation(); 
-  }
-
-  
-  dropdownButton.addEventListener('click', toggleDropdown);
-  dropdownButton.addEventListener('touchstart', toggleDropdown);
-
-  
-  document.addEventListener('click', function () {
-    dropdownMenu.classList.remove('show');
-  });
-
- 
-  dropdownMenu.addEventListener('click', function (e) {
-    e.stopPropagation();
+    // Ensure clickableItems is not null
+    if (clickableItems) {
+      clickableItems.forEach(item => {
+        item.addEventListener("click", function() {
+          const url = this.dataset.url; 
+          if (url) {
+            window.location.href = url;
+          } else {
+            console.error("No URL found for this card");
+          }
+        });
+      });
+    } else {
+      console.error("No clickable items found");
+    }
   });
 </script>
+
+
+
+
 
 {% endblock %}
