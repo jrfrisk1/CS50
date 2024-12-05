@@ -1,13 +1,16 @@
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+from flask import Flask, flash, redirect, render_template, request, session, url_for,g
 from sqlalchemy.orm import sessionmaker
-from datetime import datetime
+from datetime import datetime, timedelta
 from models import Event, engine, init_db
+from dateutil.relativedelta import relativedelta
+import os
+
 
 
 # Create a Flask app instance
 app = Flask(__name__)
 app.secret_key = "hello"  # TODO HIDE
-
+app.config['DEBUG'] = True 
 # Initialize the database (create tables if they don't exist)
 Session = sessionmaker(bind=engine)
 db_session = Session()
@@ -20,7 +23,12 @@ app.config["SESSION_PERMANENT"] = False
 
 # Store admin info
 ADMIN_USER = "admin"  # TODO HIDE
-ADMIN_PASS = "123"  # TODO HIDE
+ADMIN_PASS = "123"  # TODO 
+
+counter = os.getenv("counter")
+if not counter:
+    counter = 0 
+
 
 ''' Admin Routes'''
 
@@ -46,42 +54,10 @@ def admin():
 
 
 # Admin Dash
-@app.route("/admin-dash", methods=["GET", "POST"])
+@app.route("/admin-dash", methods=["GET"])
 def admindash():
-    if request.method == "POST":
-        name = request.form.get("eventName")
-        host = request.form.get("hostedBy")
-        desc = request.form.get("description")
-        date = request.form.get("date")
-        start = request.form.get("startTime")
-        freq = request.form.get("frequency")    
-        img = request.files.get("imageUpload")    
-
-        date = datetime.strptime(date, "%Y-%m-%d").date()
-        start = datetime.strptime(start, "%H:%M").time()
-
-        event = Event(
-            name=name,
-            host=host,
-            description=desc,
-            event_date=date,
-            start_time=start,
-            frequency=freq,
-            status="Approved",
-        )
-
-        try:
-            db_session.add(event)
-            db_session.commit()
-            flash("Event Created Successfully!", "success")
-        except Exception as e:
-            db_session.rollback()
-            flash(f"Event Failed To Create - {e}", "danger")
-
-        return redirect("/admin-dash")
-
-    else:
-        # If logged in
+        # If logged 
+    if request.method == 'GET':
         if "username" in session:
             try:
                 today = datetime.today().date()
@@ -90,12 +66,14 @@ def admindash():
                     db_session.query(Event)
                     .filter(Event.status == "Approved", Event.event_date >= today)
                     .order_by(Event.event_date.asc())
+                    .limit(10)
                     .all()
                 )
                 
                 pendingEvents = (
                     db_session.query(Event)
                     .filter(Event.status == "Pending", Event.event_date >= today)
+                    .group_by(Event.eventId)
                     .order_by(Event.event_date.asc())
                     .all()
                 )
@@ -122,6 +100,7 @@ def admindash():
                         "status": event.status,
                         "created_at": event.created_at,
                         "updated_at": event.updated_at,
+                        "eventId": event.eventId
                     }
                     approvedEventsFormatted.append(ApprovedFormattedEvent)
                 
@@ -145,6 +124,7 @@ def admindash():
                         "status": event.status,
                         "created_at": event.created_at,
                         "updated_at": event.updated_at,
+                        "eventId": event.eventId
                     }
                     pendingEventsFormatted.append(pendingFormattedEvent)
 
@@ -163,33 +143,35 @@ def admindash():
 @app.route("/edit-event", methods=["GET", "POST"])
 def editEvent():
 
+
     event_id = request.form.get("event_id")
     if event_id:
         formatted_events = []
-        event = db_session.query(Event).filter_by(id=event_id).first()
-
-        formatted_event = {
-            "id": event.id,
-            "name": event.name,
-            "host": event.host,
-            "description": event.description,
-            "event_date": event.event_date,
-            "start_time": event.start_time,
-            "frequency": event.frequency,
-            "status": event.status,
-            "created_at": event.created_at,
-            "updated_at": event.updated_at,
-            "host_link":event.host_link
-        }
-        formatted_events.append(formatted_event)
+        events = db_session.query(Event).filter_by(eventId=event_id).all()
+        for event in events:
+            formatted_event = {
+                "id": event.id,
+                "name": event.name,
+                "host": event.host,
+                "description": event.description,
+                "event_date": event.event_date,
+                "start_time": event.start_time,
+                "frequency": event.frequency,
+                "status": event.status,
+                "created_at": event.created_at,
+                "updated_at": event.updated_at,
+                "host_link":event.host_link,
+                "eventId": event.eventId
+            }
+            formatted_events.append(formatted_event)
         return render_template("admin/editevent.html", formatted_event=formatted_event)
     else:
         flash("Event Not Found", "danger")
 
 
 # Admin Update
-@app.route("/update_event/<int:event_id>", methods=["POST"])
-def updateEvent(event_id):
+@app.route("/update_event/<int:eventId>", methods=["POST"])
+def updateEvent(eventId):
     name = request.form.get("name")
     host = request.form.get("host")
     description = request.form.get("description")
@@ -210,18 +192,19 @@ def updateEvent(event_id):
             start_time_obj = datetime.strptime(start_time, "%H:%M").time()
 
     try:
-        event = db_session.query(Event).filter_by(id=event_id).one_or_none()
+        events = db_session.query(Event).filter_by(eventId=eventId).all()
 
-        event.name = name
-        event.host = host
-        event.description = description
-        event.event_date = event_date_obj
-        event.start_time = start_time_obj
-        event.frequency = frequency
-        event.status = status
-        event.host_link = host_link
+        for event in events:
+            event.name = name
+            event.host = host
+            event.description = description
+            event.event_date = event_date_obj
+            event.start_time = start_time_obj
+            event.frequency = frequency
+            event.status = status
+            event.host_link = host_link
 
-        db_session.commit()
+            db_session.commit()
         flash("Event updated successfully.", "success")
         return redirect("/admin-dash")
     except Exception as e:
@@ -233,13 +216,12 @@ def updateEvent(event_id):
 def deleteEvent():
     event_id = request.form.get("event_id")
     if event_id:
-        event = db_session.query(Event).filter_by(id=event_id).first()
-
-        if event:
+        events = db_session.query(Event).filter_by(eventId=event_id).all()
+        for event in events:
             db_session.delete(event)
-            db_session.commit()
-    else:
-        flash("Cannot Find Event.", "danger")
+    
+    db_session.commit()
+           
 
     flash("Event Deleted.", "success")
     return redirect("/admin-dash")
@@ -249,10 +231,10 @@ def deleteEvent():
 def approveEvent():
     event_id = request.form.get("event_id")
     if event_id:
-        event = db_session.query(Event).filter_by(id=event_id).first()
-        
-        event.status = "Approved"
-        db_session.commit()
+        events = db_session.query(Event).filter_by(eventId=event_id).all()
+        for event in events:
+            event.status = "Approved"
+            db_session.commit()
         flash("Event Approved", "success")
         return redirect("/admin-dash")
 
@@ -263,11 +245,12 @@ def approveEvent():
 @app.route("/deny-event", methods=["POST"])
 def denyEvent():
     event_id = request.form.get("event_id")
+    print(f"Received event_id: {event_id}")
     if event_id:
-        event = db_session.query(Event).filter_by(id=event_id).first()
-        
-        event.status = "Denied"
-        db_session.commit()
+        events = db_session.query(Event).filter_by(eventId=int(event_id)).all()
+        for event in events:
+            event.status = "Denied"
+            db_session.commit()
         flash("Event Denied", "success")
         return redirect("/admin-dash")
 
@@ -281,37 +264,66 @@ def denyEvent():
 # Submit Event
 @app.route("/submit-event", methods=["POST","GET"])
 def submitevent():
+    
+    def increment_counter():
+            global counter  
+            counter += 1
+            return counter
+    increment_counter()        
+            
     if request.method == "POST":
-        name = request.form.get("eventName")
-        host = request.form.get("hostedBy")
-        desc = request.form.get("description")
-        date = request.form.get("date")
-        start = request.form.get("startTime")
-        freq = request.form.get("frequency")    
-        link = request.form.get("hostLink")   
+        eventDict = {
+        'name' : request.form.get("eventName"),
+        'host' : request.form.get("hostedBy"),
+        'desc' : request.form.get("description"),
+        'date' : request.form.get("date"),
+        'start' : request.form.get("startTime"),
+        'freq' : request.form.get("frequency"),    
+        'link' : request.form.get("hostLink"),  }
 
-        date = datetime.strptime(date, "%Y-%m-%d").date()
-        start = datetime.strptime(start, "%H:%M").time()
-
-        event = Event(
-            name=name,
-            host=host,
-            description=desc,
-            event_date=date,
-            start_time=start,
-            frequency=freq,
-            status="Pending",
-            host_link=link
-        )
+        date = datetime.strptime(eventDict['date'], "%Y-%m-%d").date()
+        start = datetime.strptime(eventDict['start'], "%H:%M").time()
+        
+        def createEvent(freq, iterations, eventDict, ):
+          
+            
+            
+            for n in range(iterations):
+                event = Event(
+                    name=eventDict['name'],
+                    host=eventDict['host'],
+                    description=eventDict['desc'],
+                    event_date=date,
+                    start_time=start,
+                    frequency=eventDict['freq'],
+                    status="Pending",
+                    host_link=eventDict['link'],
+                    eventId =  counter
+                )
+                if freq:
+                    event.event_date = date + n*freq
+                try:
+                    db_session.add(event)
+                    db_session.commit()
+                    
+                except Exception as e:
+                    db_session.rollback()
+                    
 
         try:
-            db_session.add(event)
-            db_session.commit()
+            match eventDict['freq']:
+                case "yearly":
+                    createEvent(timedelta(days=365),3, eventDict)
+                case "monthly":
+                    createEvent(relativedelta(months=1),3, eventDict)
+                case "weekly":
+                    createEvent(timedelta(weeks=1),3, eventDict)
+                case "oneTime":
+                    createEvent(None, 1, eventDict)
             flash("Event Submitted Successfully!", "success")
         except Exception as e:
-            db_session.rollback()
             flash(f"Event Failed To Create - {e}", "danger")
-
+        
         return redirect(request.referrer or "/")
     
 # Events

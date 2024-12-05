@@ -28,13 +28,13 @@
               <li class="list-group-item fw-bold w-100">
                 <div class="d-flex ">
                   <form action="/approve-event" method="POST" class="w-100" >
-                    <input type="hidden" name="event_id" value="{{ event['id'] }}">
+                    <input type="hidden" name="event_id" value="{{ event['eventId'] }}">
                     <button type="submit" class="btn btn-primary w-75">APPROVE</button>
                   </form>
                 
                 
                   <form action="/deny-event" method="POST" class="w-100">
-                    <input type="hidden" name="event_id" value="{{ event['id'] }}">
+                    <input type="hidden" name="event_id" value="{{ event['eventId'] }}">
                     <button type="submit" class="btn btn-danger w-75">DENY</button>
                   </form>
                 </div>
@@ -71,7 +71,7 @@
 
       <div class="d-flex align-items-center">
         <form action="/edit-event" method="POST" style="display:inline;">
-          <input type="hidden" name="event_id" value="{{ event['id'] }}">
+          <input type="hidden" name="event_id" value="{{ event['eventId'] }}">
           <button type="submit" class="btn btn-success">EDIT</button>
         </form>
       </div>

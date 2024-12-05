@@ -31,6 +31,7 @@ class Event(Base):
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now())
     host_link = Column(String)
+    eventId = Column(Integer)
     
     
     
