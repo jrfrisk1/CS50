@@ -33,6 +33,11 @@ class Event(Base):
     host_link = Column(String)
     eventId = Column(Integer)
     
+class Counter(Base):
+    __tablename__ = 'counter'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    count = Column(Integer, default=0)
     
     
 

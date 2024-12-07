@@ -1,15 +1,17 @@
 from flask import Flask, flash, redirect, render_template, request, session, url_for,g
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta
-from models import Event, engine, init_db
+from models import Event, engine, init_db,Counter
 from dateutil.relativedelta import relativedelta
 import os
+
+# Path to the .env file
 
 
 
 # Create a Flask app instance
 app = Flask(__name__)
-app.secret_key = "hello"  # TODO HIDE
+app.secret_key = "hello"  
 app.config['DEBUG'] = True 
 # Initialize the database (create tables if they don't exist)
 Session = sessionmaker(bind=engine)
@@ -22,12 +24,10 @@ init_db()
 app.config["SESSION_PERMANENT"] = False
 
 # Store admin info
-ADMIN_USER = "admin"  # TODO HIDE
-ADMIN_PASS = "123"  # TODO 
+ADMIN_USER = "admin"  
+ADMIN_PASS = "123"  
 
-counter = os.getenv("counter")
-if not counter:
-    counter = 0 
+
 
 
 ''' Admin Routes'''
@@ -214,11 +214,15 @@ def updateEvent(eventId):
 # Admin Delete
 @app.route("/delete-event", methods=["POST"])
 def deleteEvent():
+    today = datetime.today().date()
     event_id = request.form.get("event_id")
     if event_id:
         events = db_session.query(Event).filter_by(eventId=event_id).all()
         for event in events:
             db_session.delete(event)
+        oldEvents = db_session.query(Event).filter(Event.event_date < today).all()
+        for old in oldEvents:
+            db_session.delete(old)
     
     db_session.commit()
            
@@ -231,11 +235,13 @@ def deleteEvent():
 def approveEvent():
     event_id = request.form.get("event_id")
     if event_id:
-        events = db_session.query(Event).filter_by(eventId=event_id).all()
-        for event in events:
-            event.status = "Approved"
+        try:
+            db_session.query(Event).filter_by(eventId=event_id).update({"status": "Approved"})
             db_session.commit()
-        flash("Event Approved", "success")
+            flash("Events Approved Successfully!", "success")
+        except Exception as e:
+            db_session.rollback()
+            flash(f"Failed to approve events: {e}", "danger")
         return redirect("/admin-dash")
 
 
@@ -265,11 +271,16 @@ def denyEvent():
 @app.route("/submit-event", methods=["POST","GET"])
 def submitevent():
     
-    def increment_counter():
-            global counter  
-            counter += 1
-            return counter
-    increment_counter()        
+
+    counter = db_session.query(Counter).one_or_none()
+    if not counter:
+        main = Counter(count=0)
+        db_session.add(main)
+        db_session.commit()
+        counter = db_session.query(Counter).one_or_none()
+    else:    
+        counter.count += 1
+        db_session.commit()      
             
     if request.method == "POST":
         eventDict = {
@@ -285,10 +296,9 @@ def submitevent():
         start = datetime.strptime(eventDict['start'], "%H:%M").time()
         
         def createEvent(freq, iterations, eventDict, ):
-          
-            
-            
+            eventsList=[]
             for n in range(iterations):
+                event_date = date + n * freq if freq else date
                 event = Event(
                     name=eventDict['name'],
                     host=eventDict['host'],
@@ -298,26 +308,26 @@ def submitevent():
                     frequency=eventDict['freq'],
                     status="Pending",
                     host_link=eventDict['link'],
-                    eventId =  counter
+                    eventId =  counter.count
                 )
-                if freq:
-                    event.event_date = date + n*freq
-                try:
-                    db_session.add(event)
-                    db_session.commit()
-                    
-                except Exception as e:
-                    db_session.rollback()
-                    
+                eventsList.append(event)
+            try:
+                db_session.bulk_save_objects(eventsList)
+                db_session.commit()
+                flash("Event saved Successfully!", "success")
+                
+            except Exception as e:
+                db_session.rollback()
+                flash(f"Event Failed To SAVE - {e}", "danger")
 
         try:
             match eventDict['freq']:
                 case "yearly":
-                    createEvent(timedelta(days=365),3, eventDict)
+                    createEvent(timedelta(days=365),5, eventDict)
                 case "monthly":
-                    createEvent(relativedelta(months=1),3, eventDict)
+                    createEvent(relativedelta(months=1),(5*12), eventDict)
                 case "weekly":
-                    createEvent(timedelta(weeks=1),3, eventDict)
+                    createEvent(timedelta(weeks=1),(5*52), eventDict)
                 case "oneTime":
                     createEvent(None, 1, eventDict)
             flash("Event Submitted Successfully!", "success")
