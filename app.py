@@ -46,7 +46,7 @@ def admin():
                 return redirect("/admin-dash")
             else:
                 return render_template("admin/adminLogin.html", error="Invalid Login")
-        return render_template("admin/adminLogin.html")
+    return render_template("admin/adminLogin.html")
 
 
 # Admin Dash
