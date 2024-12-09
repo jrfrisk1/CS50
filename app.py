@@ -46,9 +46,6 @@ def admin():
                 return redirect("/admin-dash")
             else:
                 return render_template("admin/adminLogin.html", error="Invalid Login")
-    if "username" in session:
-        return redirect("/admin-dash")
-    else:
         return render_template("admin/adminLogin.html")
 
 
