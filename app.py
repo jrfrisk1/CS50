@@ -5,7 +5,6 @@ from models import Event, engine, init_db,Counter
 from dateutil.relativedelta import relativedelta
 import os
 
-# Path to the .env file
 
 
 
@@ -56,7 +55,7 @@ def admin():
 # Admin Dash
 @app.route("/admin-dash", methods=["GET"])
 def admindash():
-        # If logged 
+        # If logged in
     if request.method == 'GET':
         if "username" in session:
             try:
@@ -109,7 +108,7 @@ def admindash():
                         "id": event.id,
                         "name": event.name,
                         "host": event.host,
-                        "description": event.description[:350] + ". . .",
+                        "description": f"{event.description[:350]} . . ." if len(event.description) > 350 else event.description,
                         "event_date": (
                             event.event_date.strftime("%m/%d/%Y")
                             if event.event_date
@@ -298,12 +297,16 @@ def submitevent():
         def createEvent(freq, iterations, eventDict, ):
             eventsList=[]
             for n in range(iterations):
-                event_date = date + n * freq if freq else date
+                if freq:
+                    event_date = date + (n * freq)
+                else:
+                    event_date = date
+
                 event = Event(
                     name=eventDict['name'],
                     host=eventDict['host'],
                     description=eventDict['desc'],
-                    event_date=date,
+                    event_date=event_date,
                     start_time=start,
                     frequency=eventDict['freq'],
                     status="Pending",
@@ -356,7 +359,7 @@ def events():
             "id": event.id,
             "name": event.name,
             "host": event.host,
-            "description": event.description[:350] + ". . .",
+            "description": f"{event.description[:350]} . . ." if len(event.description) > 350 else event.description,
             "event_date": (
                 event.event_date.strftime("%m/%d/%Y") if event.event_date else None
             ),

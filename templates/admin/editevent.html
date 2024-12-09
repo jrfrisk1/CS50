@@ -8,6 +8,7 @@
 </head>
 <body>
     <div class="d-flex justify-content-end p-2">
+                        <!-- DELETE BUTTON-->
         <form action="/delete-event" method="POST">
             <input type="hidden" name="event_id" value="{{ formatted_event['eventId'] }}">
             <button type="submit" class="btn btn-danger">DELETE</button>
@@ -55,7 +56,6 @@
             
                 <!-- Cancel BUTTON-->
                 <a href="/admin-dash" class="btn btn-secondary">Cancel</a>
-                <!-- DELETE BUTTON-->
                 
             </div>
         </form>
