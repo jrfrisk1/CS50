@@ -69,8 +69,8 @@ def admindash():
                 pendingEvents = (
                     db_session.query(Event)
                     .filter(Event.status == "Pending", Event.event_date >= today)
-                    .group_by(Event.eventId)
-                    .order_by(Event.event_date.asc())
+                    .distinct(Event.eventId)
+                    .order_by(Event.eventId, Event.event_date.asc())
                     .all()
                 )
                 pendingEventsFormatted = []
