@@ -1,5 +1,5 @@
 # Event Manager
-#### Video Demo:  [<URL HERE>](https://youtu.be/suG7PhLlA1I)
+#### Video Demo:  (https://youtu.be/suG7PhLlA1I)
 #### Description:
 # Flask Local Venue Events App
 
